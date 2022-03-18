@@ -14,33 +14,43 @@ window.addEventListener("load", () => {
       long = position.coords.longitude;
       lat = position.coords.latitude;
 
-      const proxy = "https://cors-anywhere.herokuapp.com/";
-      const api = `${proxy}https://api.darksky.net/forecast/fd9d9c6418c23d94745b836767721ad1/${lat},${long}`;
-
-      fetch(api)
+      const api = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=a91dc4f621cbeae0e61c58b5d0849c5d`;
+   
+      https: fetch(api)
         .then((response) => {
           return response.json();
+          
         })
         .then((data) => {
-          const { temperature, summary, icon } = data.currently;
+          console.log(data);
+          const temp = data.main.temp;
+          const iconData = data.weather[0].icon;
+
+          //turn kelvin to fahrenheit
+          const tempFahrenheit = Math.floor(((temp - 273.15) * 9) / 5 + 32);
+          //formula for Celsius
+          let celsius = (tempFahrenheit - 32) * (5 / 9);
 
           //Set DOM Elements from the API
-          temperatureDegree.textContent = temperature;
-          temperatureDescription.textContent = summary;
+          temperatureDegree.textContent = tempFahrenheit;
           locationTimezone.textContent = data.timezone;
-          //formula for Celsius
-          let celsius = (temperature - 32) * (5 / 9);
-          //Set Icon
-          setIcons(icon, document.querySelector(".icon"));
 
-          //Change temperature to Celsius/Farenheit
+          //Set Icon
+          let icon = document.querySelector(".icon");
+          icon.src = `https://openweathermap.org/img/w/${iconData}.png`;
+          
+          //Set location
+          let location = document.querySelector(".temperature-location");
+          location.innerText = data.name;
+
+          //Change temperature to Celsius/Fahrenheit
           temperatureSection.addEventListener("click", () => {
             if (temperatureSpan.textContent === "F") {
               temperatureSpan.textContent = "C";
               temperatureDegree.textContent = Math.floor(celsius);
-            } else {
+            } else if (temperatureSpan.textContent === "C") {
               temperatureSpan.textContent = "F";
-              temperatureDegree.textContent = temperature;
+              temperatureDegree.textContent = tempFahrenheit;
             }
           });
         });
@@ -48,9 +58,3 @@ window.addEventListener("load", () => {
   }
 });
 
-function setIcons(icon, iconID) {
-  const skycons = new Skycons({ color: "white" });
-  const currentIcon = icon.replace(/-/g, "_").toUpperCase();
-  skycons.play();
-  return skycons.set(iconID, Skycons[currentIcon]);
-}
